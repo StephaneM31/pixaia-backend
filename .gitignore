@@ -1,0 +1,6 @@
+# Ignorer les dépendances et fichiers générés
+node_modules/
+.next/
+.env
+uploads/
+uploads.json
