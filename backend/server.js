@@ -11,11 +11,12 @@ app.use(express.json());
 
 // 📌 Dossier où stocker les fichiers uploadés (Défini AVANT son utilisation)
 const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+const dataFile = path.join(__dirname, "uploads.json"); // 📌 Fichier pour stocker les métadonnées
 
-// 📌 Maintenant, on peut l’utiliser ici
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+if (!fs.existsSync(dataFile)) fs.writeFileSync(dataFile, JSON.stringify([]));
+
+// 📌 Servir les fichiers statiques
 app.use("/uploads", express.static(uploadDir));
 
 // 📌 Route de test (API existante)
@@ -38,26 +39,45 @@ const upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 }, // 📌 Limite de 50MB par fichier
 });
 
-// 📌 Route pour uploader un fichier
+// 📌 Route pour uploader un fichier AVEC titre et tags
 app.post("/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: "Aucun fichier envoyé." });
+    const { title, tags } = req.body;
+
+    if (!req.file || !title || !tags) {
+        return res.status(400).json({ error: "Fichier, titre et tags sont obligatoires." });
     }
-    res.json({ 
-        message: "Fichier uploadé avec succès",
+
+    // Charger les données existantes
+    const existingData = JSON.parse(fs.readFileSync(dataFile));
+
+    // Ajouter un nouvel objet avec métadonnées
+    const newFile = {
+        id: Date.now(),
         filename: req.file.filename,
-        path: `/uploads/${req.file.filename}`
-    });
+        path: `/uploads/${req.file.filename}`,
+        title,
+        tags: tags.split(",").map(tag => tag.trim()), // Convertir en tableau
+        uploadedAt: new Date().toISOString(),
+        likes: 0,
+        comments: []
+    };
+
+    existingData.push(newFile);
+
+    // Sauvegarder les données mises à jour
+    fs.writeFileSync(dataFile, JSON.stringify(existingData, null, 2));
+
+    res.json({ message: "Fichier uploadé avec succès !", file: newFile });
 });
 
-// 📌 Route pour récupérer la liste des fichiers
+// 📌 Route pour récupérer la liste des fichiers AVEC leurs métadonnées
 app.get("/files", (req, res) => {
-    fs.readdir(uploadDir, (err, files) => {
-        if (err) {
-            return res.status(500).json({ error: "Impossible de récupérer les fichiers." });
-        }
-        res.json({ files });
-    });
+    try {
+        const filesData = JSON.parse(fs.readFileSync(dataFile));
+        res.json({ files: filesData });
+    } catch (error) {
+        res.status(500).json({ error: "Impossible de récupérer les fichiers." });
+    }
 });
 
 // 📌 Route pour supprimer un fichier
@@ -77,11 +97,16 @@ app.delete("/delete/:filename", (req, res) => {
             console.error("Erreur lors de la suppression :", err);
             return res.status(500).json({ error: "Impossible de supprimer le fichier." });
         }
+
+        // 📌 Supprimer aussi l'entrée dans `uploads.json`
+        let existingData = JSON.parse(fs.readFileSync(dataFile));
+        existingData = existingData.filter(file => file.filename !== filename);
+        fs.writeFileSync(dataFile, JSON.stringify(existingData, null, 2));
+
         console.log("Fichier supprimé avec succès !");
         res.json({ message: "Fichier supprimé avec succès !" });
     });
 });
-
 
 // 📌 Démarrer le serveur
 const PORT = process.env.PORT || 5000;

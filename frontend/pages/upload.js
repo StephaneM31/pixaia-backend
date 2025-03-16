@@ -1,39 +1,28 @@
 import { useState } from "react";
 
-export default function Upload() {
+export default function UploadPage() {
   const [file, setFile] = useState(null);
-  const [uploadMessage, setUploadMessage] = useState("");
-
-  const allowedImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-  const allowedVideoTypes = ["video/mp4", "video/webm"];
+  const [title, setTitle] = useState("");
+  const [tags, setTags] = useState("");
+  const [message, setMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false); // 📌 Gère l'état du bouton
 
   const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-
-    if (!selectedFile) {
-      setFile(null);
-      return;
-    }
-
-    if (![...allowedImageTypes, ...allowedVideoTypes].includes(selectedFile.type)) {
-      alert("Format non autorisé. Veuillez sélectionner une image ou une vidéo.");
-      setFile(null);
-      return;
-    }
-
-    setFile(selectedFile);
+    setFile(event.target.files[0]);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!file) {
-      alert("Veuillez sélectionner un fichier.");
+  const handleUpload = async () => {
+    if (!file || !title || !tags) {
+      setMessage("Veuillez sélectionner un fichier et remplir le titre et les tags.");
       return;
     }
+
+    setIsUploading(true); // 📌 Désactive le bouton pendant l'upload
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("title", title);
+    formData.append("tags", tags);
 
     try {
       const response = await fetch("http://localhost:5000/upload", {
@@ -41,24 +30,57 @@ export default function Upload() {
         body: formData,
       });
 
-      const result = await response.json();
-      setUploadMessage(result.message);
-      setFile(null);
+      const data = await response.json();
+      if (response.ok) {
+        setMessage("Fichier uploadé avec succès !");
+        setFile(null);
+        setTitle("");
+        setTags("");
+      } else {
+        setMessage(`Erreur : ${data.error}`);
+      }
     } catch (error) {
-      console.error("Erreur lors de l'upload :", error);
-      setUploadMessage("Erreur lors de l'upload. Réessayez.");
+      setMessage("Erreur lors de l'upload.");
+    } finally {
+      setIsUploading(false); // 📌 Réactive le bouton après l'upload
     }
   };
 
   return (
     <div className="container">
-      <h1>Uploader une image ou une vidéo</h1>
-      <form onSubmit={handleSubmit} className="upload-form">
-        <input type="file" accept="image/*,video/*" onChange={handleFileChange} />
-        {file && <p>Fichier sélectionné : <strong>{file.name}</strong></p>}
-        <button type="submit">Envoyer</button>
-      </form>
-      {uploadMessage && <p>{uploadMessage}</p>}
+      <h1>Uploader un fichier</h1>
+
+      <label>
+        Titre :
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Nom du fichier"
+        />
+      </label>
+
+      <label>
+        Tags (séparés par des virgules) :
+        <input
+          type="text"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="ex: art, digital, IA"
+        />
+      </label>
+
+      <label>
+        Sélectionnez un fichier :
+        <input type="file" onChange={handleFileChange} />
+      </label>
+
+      {/* 📌 Bouton désactivé pendant l'upload */}
+      <button onClick={handleUpload} disabled={isUploading}>
+        {isUploading ? "Envoi en cours..." : "Uploader"}
+      </button>
+
+      {message && <p>{message}</p>}
     </div>
   );
 }
