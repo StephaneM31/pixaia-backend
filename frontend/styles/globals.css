@@ -3,156 +3,152 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
 }
 
 body, html {
   width: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-  color: #333;
+  background: linear-gradient(135deg, #0a0f1f, #121b35);
+  color: #ffffff;
   padding: 20px;
+  overflow-x: hidden;
 }
 
 /* ==== CONTENEUR PRINCIPAL ==== */
 .container {
-  width: 100vw;
-  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
 
-/* ==== NAVBAR ==== */
+/* ==== NAVBAR FUTURISTE ==== */
 .navbar {
-  background-color: #0056b3;
-  padding: 15px 20px;
-}
-
-.navbar .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
+  position: relative;
+  z-index: 10;
 }
 
-.navbar h1 {
-  color: rgb(218, 0, 0);
+.navbar-logo {
+  color: #00eaff;
+  font-size: 26px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.menu-toggle {
+  display: none;
   font-size: 24px;
+  background: none;
+  border: none;
+  color: #00eaff;
+  cursor: pointer;
 }
 
-.navbar ul {
+.navbar-links {
   list-style: none;
   display: flex;
   gap: 20px;
 }
 
-.navbar ul li a {
-  color: rgb(218, 0, 0);
+.navbar-links li a {
+  color: #00eaff;
   text-decoration: none;
   font-size: 18px;
   font-weight: bold;
+  transition: color 0.3s;
 }
 
-.navbar ul li a:hover {
-  text-decoration: underline;
+.navbar-links li a:hover {
   color: #ffdd57;
+  text-shadow: 0px 0px 10px rgba(255, 221, 87, 0.8);
 }
 
-/* ==== BOUTONS ==== */
-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  margin-top: 10px;
+/* 📱 Responsive navbar */
+@media screen and (max-width: 768px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  .navbar-links {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 10px 20px;
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 8px 20px rgba(0, 255, 255, 0.3);
+    z-index: 20;
+  }
+
+  .navbar-links.open {
+    display: flex;
+  }
 }
 
-button:hover {
-  background: #0056b3;
-}
-
-.delete-btn {
-  background: red;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.delete-btn:hover {
-  background: darkred;
-}
-
-/* ==== FORMULAIRES ==== */
-input, textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-input:focus, textarea:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
-/* ==== GALERIE & MINIATURES ==== */
+/* ==== GALERIE & MINIATURES FUTURISTES ==== */
 .gallery {
   width: 100%;
-  max-width: 1200px;
-  
+  margin: 40px auto;
+  position: relative; /* nécessaire pour Masonry */
 }
 
-/* Assurez-vous que Masonry applique correctement les colonnes */
 .file-card {
-  width: 200px;
-  margin-bottom: -14px;/* 📌 Espacement vertical */ 
-  padding-top: 10px;
-}
-
-.file-card:nth-child(4n) {
-  margin-right: 0;
+  width: 220px;           /* Pas de % ou max-width */
+  margin-bottom: 15px;    /* Marge verticale (correspond à gutter) */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 5px 15px rgba(0, 255, 255, 0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
 }
 
 .file-card:hover {
   transform: scale(1.05);
-}
-
-.thumbnail {
-  display: inline-block;
-  width: 100%;
+  box-shadow: 0px 10px 20px rgba(0, 255, 255, 0.6);
 }
 
 .thumbnail img, .thumbnail video {
   width: 100%;
-  height: auto; /* Garde les proportions */
-  object-fit: contain; /* Assure que l’image n’est pas coupée */
+  height: auto;
+  object-fit: cover;
   border-radius: 5px;
-
+  display: block; /* 🔥 empêche l'espace fantôme */
 }
 
-/* Icone pour différencier les types de fichiers */
+/* 📌 Icones améliorées */
 .icon {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background: rgba(0, 0, 0, 0.7);
+  top: 8px;
+  right: 8px;
+  font-size: 18px;
   color: white;
-  padding: 5px;
-  border-radius: 5px;
-  font-size: 14px;
+  text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.8);
 }
 
-/* ==== MODAL ==== */
+.icon.video {
+  color: gold;
+}
+
+.icon.image {
+  color: silver;
+}
+
+/* ==== MODAL FUTURISTE ==== */
 .overlay {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.8);
   position: fixed;
   top: 0;
   left: 0;
@@ -161,20 +157,31 @@ input:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(10px);
 }
 
 .modal-content {
-  background: white;
+  background: rgba(255, 255, 255, 0.1);
   padding: 20px;
-  border-radius: 10px;
-  width: 50%;
-  max-width: 500px;
-  min-width: 300px;
-  height: auto;
-  max-height: 80vh;
-  text-align: center;
+  border-radius: 12px;
+  width: 90vw;
+  max-width: 600px;
+  max-height: 90vh; /* ne dépasse jamais l'écran */
+  overflow-y: auto;
+  box-shadow: 0px 10px 30px rgba(0, 255, 255, 0.5);
+  backdrop-filter: blur(15px);
   position: relative;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.media-content {
+  max-width: 100%;
+  max-height: 60vh; /* ✅ s'adapte même si l'écran est petit */
+  height: auto;
+  width: auto;
+  border-radius: 8px;
 }
 
 .close-button {
@@ -185,25 +192,57 @@ input:focus, textarea:focus {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: black;
+  color: white;
 }
 
 .close-button:hover {
   color: red;
 }
 
-.media-content {
-  max-width: 100%;
-  max-height: 60vh;
-  object-fit: contain;
-  border-radius: 5px;
+/* ==== BOUTONS FUTURISTES ==== */
+button {
+  background: linear-gradient(135deg, #00eaff, #007bff);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: background 0.3s, transform 0.2s;
 }
 
-/* ==== FOOTER ==== */
-.footer {
-  text-align: center;
-  padding: 20px;
-  background: #007bff;
-  color: white;
-  margin-top: 40px;
+button:hover {
+  background: linear-gradient(135deg, #00eaff, #00a6ff);
+  transform: scale(1.05);
+  box-shadow: 0px 5px 15px rgba(0, 255, 255, 0.4);
 }
+
+.delete-btn {
+  background: linear-gradient(135deg, #ff4d4d, #ff0000);
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #ff4d4d, #cc0000);
+  transform: scale(1.05);
+  box-shadow: 0px 5px 15px rgba(255, 0, 0, 0.4);
+}
+
+/* 📌 RESPONSIVE DESIGN */
+@media screen and (max-width: 768px) {
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .file-card {
+    max-width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .gallery {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+

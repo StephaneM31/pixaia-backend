@@ -2,22 +2,31 @@ import { useState } from "react";
 
 export default function UploadPage() {
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null); // 📌 Aperçu du fichier
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
   const [message, setMessage] = useState("");
-  const [isUploading, setIsUploading] = useState(false); // 📌 Gère l'état du bouton
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    const selectedFile = event.target.files[0];
+    setFile(selectedFile);
+
+    // 📌 Génère un aperçu pour les images uniquement
+    if (selectedFile && selectedFile.type.startsWith("image")) {
+      setPreview(URL.createObjectURL(selectedFile));
+    } else {
+      setPreview(null);
+    }
   };
 
   const handleUpload = async () => {
-    if (!file || !title || !tags) {
+    if (!file || !title || !tags.trim()) {
       setMessage("Veuillez sélectionner un fichier et remplir le titre et les tags.");
       return;
     }
 
-    setIsUploading(true); // 📌 Désactive le bouton pendant l'upload
+    setIsUploading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -34,6 +43,7 @@ export default function UploadPage() {
       if (response.ok) {
         setMessage("Fichier uploadé avec succès !");
         setFile(null);
+        setPreview(null); // 📌 Supprime l'aperçu après upload
         setTitle("");
         setTags("");
       } else {
@@ -42,12 +52,12 @@ export default function UploadPage() {
     } catch (error) {
       setMessage("Erreur lors de l'upload.");
     } finally {
-      setIsUploading(false); // 📌 Réactive le bouton après l'upload
+      setIsUploading(false);
     }
   };
 
   return (
-    <div className="container">
+    <div className="container upload-container">
       <h1>Uploader un fichier</h1>
 
       <label>
@@ -75,12 +85,20 @@ export default function UploadPage() {
         <input type="file" onChange={handleFileChange} />
       </label>
 
+      {/* 📌 Affichage de l'aperçu */}
+      {preview && (
+        <div className="preview-container">
+          <p>Aperçu :</p>
+          <img src={preview} alt="Aperçu du fichier" className="preview-image" />
+        </div>
+      )}
+
       {/* 📌 Bouton désactivé pendant l'upload */}
       <button onClick={handleUpload} disabled={isUploading}>
         {isUploading ? "Envoi en cours..." : "Uploader"}
       </button>
 
-      {message && <p>{message}</p>}
+      {message && <p className="upload-message">{message}</p>}
     </div>
   );
 }
