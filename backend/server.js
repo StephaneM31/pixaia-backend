@@ -94,14 +94,18 @@ app.get("/search", (req, res) => {
   app.get("/filter", (req, res) => {
     const type = req.query.type;
     const filesData = JSON.parse(fs.readFileSync(dataFile));
-    const filteredFiles = filesData.filter(file => {
-      if (type === "image") {
-        return file.filename.endsWith(".png") || file.filename.endsWith(".jpg") || file.filename.endsWith(".jpeg");
-      } else if (type === "video") {
-        return file.filename.endsWith(".mp4") || file.filename.endsWith(".webm");
-      }
-      return false;
-    });
+  
+    const filteredFiles = filesData
+      .filter(file => {
+        if (type === "image") {
+          return file.filename.endsWith(".png") || file.filename.endsWith(".jpg") || file.filename.endsWith(".jpeg");
+        } else if (type === "video") {
+          return file.filename.endsWith(".mp4") || file.filename.endsWith(".webm");
+        }
+        return false;
+      })
+      .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)); // 🔥 tri du plus récent au plus ancien
+  
     res.json({ files: filteredFiles });
   });
 

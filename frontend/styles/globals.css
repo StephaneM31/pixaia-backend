@@ -32,7 +32,7 @@ body, html {
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 255, 255, 0.2);
   position: relative;
-  z-index: 10;
+  z-index: 5;
 }
 
 .navbar-logo {
@@ -115,6 +115,11 @@ body, html {
   cursor: pointer;
 }
 
+.file-card.wide-card {
+  grid-column: span 2; /* Pour fallback si display: grid */
+  width: calc(220px * 2 + 15px); /* = 455px si columnWidth = 220 */
+}
+
 .file-card:hover {
   transform: scale(1.05);
   box-shadow: 0px 10px 20px rgba(0, 255, 255, 0.6);
@@ -158,6 +163,7 @@ body, html {
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
+  z-index: 9999;
 }
 
 .modal-content {
@@ -166,39 +172,96 @@ body, html {
   border-radius: 12px;
   width: 90vw;
   max-width: 600px;
-  max-height: 90vh; /* ne dépasse jamais l'écran */
-  overflow-y: auto;
+  max-height: 90vh;
+  overflow: hidden; /* ✅ plus de scroll global ici */
   box-shadow: 0px 10px 30px rgba(0, 255, 255, 0.5);
   backdrop-filter: blur(15px);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; /* ✅ pour garder tout bien structuré */
 }
 .media-content {
   max-width: 100%;
-  max-height: 60vh; /* ✅ s'adapte même si l'écran est petit */
-  height: auto;
+  max-height: 60vh;
   width: auto;
+  height: auto;
   border-radius: 8px;
 }
 
 .close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
+  font-size: 22px;
   background: none;
   border: none;
-  font-size: 24px;
-  cursor: pointer;
   color: white;
+  cursor: pointer;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
 }
 
 .close-button:hover {
   color: red;
 }
 
+.modal-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.modal-header {
+  width: 100%;
+  max-height: 80px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 10px;
+  text-align: center;
+  font-size: 16px; /* ✅ Texte normal */
+  color: #eee;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.modal-header-scroll {
+  width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+  overflow-x: hidden; /* ✅ empêche tout scroll horizontal */
+  padding: 0 10px;
+  text-align: center;
+  word-break: break-word; /* ✅ force les mots longs à passer à la ligne */
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  color: #00eaff;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.modal-tags {
+  width: 100%;
+  max-height: 60px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #00eaff;
+  word-break: break-word;
+}
+
+.modal-media {
+  max-width: 100%;
+  max-height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 /* ==== BOUTONS FUTURISTES ==== */
 button {
   background: linear-gradient(135deg, #00eaff, #007bff);
@@ -246,3 +309,68 @@ button:hover {
   }
 }
 
+.modal-description-box {
+ background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  min-height: 3.6em; /* 🔥 3 lignes d'environ 1.2em */
+  max-height: 80px;
+  overflow-y: auto;
+  text-align: center;
+  width: 100%;
+  position: relative;
+}
+
+.modal-description-text {
+  font-size: 15px;
+  color: #ccc;
+  word-break: break-word;
+  margin-bottom: 10px;
+}
+
+.expand-description-btn {
+  font-size: 18px;
+  background: none;
+  border: none;
+  color: #a78bfa; /* violet */
+  cursor: pointer;
+  text-shadow: 0 0 5px rgba(167, 139, 250, 0.7);
+}
+
+.expand-description-btn.top.left {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 18px;
+  background: none;
+  border: none;
+  color: #00eaff;
+  cursor: pointer;
+  padding: 0;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.modal-full-text {
+  text-align: left;
+  color: #fff;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-full-text h2 {
+  margin-bottom: 10px;
+  color: #00eaff;
+}
+
+.modal-top-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 10px;
+  margin-bottom: 10px;
+  position: relative;
+  top: 0;
+  z-index: 1;
+}

@@ -14,6 +14,7 @@ export default function Home() {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [columnWidth, setColumnWidth] = useState(200);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showFullText, setShowFullText] = useState(false);
 
   const [showConfirm, setShowConfirm] = useState(false); // ✅ AJOUT ICI
 
@@ -37,14 +38,36 @@ export default function Home() {
   useEffect(() => {
     fetch("http://localhost:5000/files")
       .then((response) => response.json())
-      .then((data) => {
-        const sortedFiles = data.files.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+      .then(async (data) => {
+        const filesWithDimensions = await Promise.all(
+          data.files.map(async (file) => {
+            if (file.filename.endsWith(".mp4") || file.filename.endsWith(".webm")) {
+              return { ...file }; // pas besoin de dimensions
+            }
+  
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.src = `http://localhost:5000${file.path}`;
+              img.onload = () => {
+                resolve({
+                  ...file,
+                  width: img.naturalWidth,
+                  height: img.naturalHeight,
+                });
+              };
+              img.onerror = () => resolve({ ...file }); // fallback si erreur
+            });
+          })
+        );
+  
+        const sortedFiles = filesWithDimensions.sort(
+          (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
+        );
         setFiles(sortedFiles);
         setFilteredFiles(sortedFiles);
       })
       .catch((error) => console.error("Erreur de récupération des fichiers :", error));
   }, []);
-
   // 📌 Initialisation et mise à jour de Masonry
   useEffect(() => {
     if (!galleryRef.current) return;
@@ -56,10 +79,11 @@ export default function Home() {
 
       masonryInstance.current = new Masonry(galleryRef.current, {
         itemSelector: ".file-card",
-  columnWidth: 220, // ✅ valeur fixe
-  gutter: 15,       // ✅ espace horizontal + vertical
-  fitWidth: true,   // ✅ important pour centrage de la grille
-  horizontalOrder: true,
+        columnWidth: 220,
+        gutter: 15,
+        fitWidth: true,
+        horizontalOrder: true,
+        percentPosition: false, // ⚠️ met "false" ici (par défaut), car on utilise px
       });
 
       const waitForMedia = () => {
@@ -150,7 +174,34 @@ export default function Home() {
     setFilterType(type);
     fetch(`http://localhost:5000/filter?type=${type}`)
       .then((response) => response.json())
-      .then((data) => setFilteredFiles(data.files))
+      .then(async (data) => {
+        const filesWithDimensions = await Promise.all(
+          data.files.map(async (file) => {
+            if (file.filename.endsWith(".mp4") || file.filename.endsWith(".webm")) {
+              return { ...file }; // pas besoin de dimensions
+            }
+  
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.src = `http://localhost:5000${file.path}`;
+              img.onload = () => {
+                resolve({
+                  ...file,
+                  width: img.naturalWidth,
+                  height: img.naturalHeight,
+                });
+              };
+              img.onerror = () => resolve({ ...file });
+            });
+          })
+        );
+  
+        const sortedFiltered = filesWithDimensions.sort(
+          (a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt)
+        );
+  
+        setFilteredFiles(sortedFiltered);
+      })
       .catch((error) => console.error("Erreur de filtrage :", error));
   };
 
@@ -202,7 +253,11 @@ export default function Home() {
       {/* 📌 Galerie Masonry */}
       <div className="gallery" ref={galleryRef}>
         {filteredFiles.map((file) => (
-          <div key={file.id} className="file-card" onClick={() => openModal(file)}>
+          <div
+  key={file.id}
+  className={`file-card ${file.width > file.height ? "wide-card" : ""}`}
+  onClick={() => openModal(file)}
+>
             {file.filename.endsWith(".mp4") || file.filename.endsWith(".webm") ? (
               <div className="thumbnail video">
                 <video
@@ -239,58 +294,93 @@ export default function Home() {
 
       {/* 📌 Modal d'affichage */}
       <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal-content" overlayClassName="overlay">
-  <button className="close-button" onClick={closeModal}>✖</button>
   {selectedFile && (
     <>
-      <h2>{selectedFile.title || "Aucun titre"}</h2>
-      <p className="hashtags">{selectedFile.tags?.map(tag => `#${tag}`).join(" ")}</p>
+      <div className="modal-top-buttons">
+        {selectedFile.title?.length > 150 && (
+          <button className="expand-description-btn" onClick={() => setShowFullText(true)}>➕</button>
+        )}
+        <button className="close-button" onClick={closeModal}>✖</button>
+      </div>
 
-      {selectedFile.filename.endsWith(".mp4") || selectedFile.filename.endsWith(".webm") ? (
-        <video
-        src={`http://localhost:5000${selectedFile.path}`}
-        controls
-        autoPlay
-        className="media-content"
-      />
-    ) : (
-      <img
-        src={`http://localhost:5000${selectedFile.path}`}
-        alt="Image"
-        className="media-content"
-      />
-    )}
-
-      {showConfirm ? (
-        <div className="confirm-box">
-          <p>Êtes-vous sûr de vouloir supprimer ce fichier ?</p>
-          <button className="confirm-btn" onClick={async () => {
-            try {
-              const response = await fetch(`http://localhost:5000/delete/${selectedFile.filename}`, {
-                method: "DELETE",
-              });
-              if (response.ok) {
-                setFiles((prev) => prev.filter((file) => file.filename !== selectedFile.filename));
-                setFilteredFiles((prev) => prev.filter((file) => file.filename !== selectedFile.filename));
-                closeModal();
-              } else {
-                console.error("Erreur lors de la suppression !");
-              }
-            } catch (error) {
-              console.error("Erreur lors de la requête :", error);
-            } finally {
-              setShowConfirm(false);
-            }
-          }}>
-            Oui
-          </button>
-          <button className="cancel-btn" onClick={() => setShowConfirm(false)}>Non</button>
+      <div className="modal-body">
+        {/* Texte défilant verticalement si trop long */}
+        <div className="modal-description-box">
+          <p className="modal-description-text">
+            {selectedFile.title || "Pas de description"}
+          </p>
         </div>
-      ) : (
-        <button className="delete-btn" onClick={() => setShowConfirm(true)}>🗑 Supprimer</button>
-      )}
+
+        <div className="modal-tags">
+          {selectedFile.tags?.map(tag => `#${tag}`).join(" ")}
+        </div>
+
+        {/* Média toujours fixe */}
+        <div className="modal-media">
+          {selectedFile.filename.endsWith(".mp4") || selectedFile.filename.endsWith(".webm") ? (
+            <video
+              src={`http://localhost:5000${selectedFile.path}`}
+              controls
+              autoPlay
+              loop
+              className="media-content"
+            />
+          ) : (
+            <img
+              src={`http://localhost:5000${selectedFile.path}`}
+              alt="Image"
+              className="media-content"
+            />
+          )}
+        </div>
+
+        {/* Suppression */}
+        {showConfirm ? (
+          <div className="confirm-box">
+            <p>Êtes-vous sûr de vouloir supprimer ce fichier ?</p>
+            <button className="confirm-btn" onClick={async () => {
+              try {
+                const response = await fetch(`http://localhost:5000/delete/${selectedFile.filename}`, {
+                  method: "DELETE",
+                });
+                if (response.ok) {
+                  setFiles(prev => prev.filter(file => file.filename !== selectedFile.filename));
+                  setFilteredFiles(prev => prev.filter(file => file.filename !== selectedFile.filename));
+                  closeModal();
+                } else {
+                  console.error("Erreur lors de la suppression !");
+                }
+              } catch (error) {
+                console.error("Erreur lors de la requête :", error);
+              } finally {
+                setShowConfirm(false);
+              }
+            }}>
+              Oui
+            </button>
+            <button className="cancel-btn" onClick={() => setShowConfirm(false)}>Non</button>
+          </div>
+        ) : (
+          <button className="delete-btn" onClick={() => setShowConfirm(true)}>🗑 Supprimer</button>
+        )}
+      </div>
     </>
   )}
 </Modal>
+{showFullText && (
+  <Modal
+    isOpen={showFullText}
+    onRequestClose={() => setShowFullText(false)}
+    className="modal-content"
+    overlayClassName="overlay"
+  >
+    <button className="close-button" onClick={() => setShowFullText(false)}>✖</button>
+    <div className="modal-full-text">
+      <h2>Description complète</h2>
+      <p>{selectedFile.title}</p>
+    </div>
+  </Modal>
+)}
     </div>
   );
 }
